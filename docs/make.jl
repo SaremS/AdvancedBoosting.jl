@@ -9,7 +9,3 @@ makedocs(
 	     "Root Boosting Model" => "root_boosting_model.md"
 	],
 )
-
-deploydocs(
-    repo = "github.com/SaremS/AdvancedBoosting.jl.git",
-)
