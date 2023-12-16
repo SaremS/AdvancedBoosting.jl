@@ -10,6 +10,8 @@ The abstract supertype corresponding to parameterizable transformations.
 """
 abstract type ParameterizableTransform end
 
+(t::ParameterizableTransform)(boosting_output) = @error "Not implemented"
+(t::ParameterizableTransform)(boosting_output, X) = @error "Not implemented"
 
 """
 Applies the identity transformation,

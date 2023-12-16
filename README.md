@@ -5,4 +5,4 @@
 [![](https://img.shields.io/badge/docs-blue)](https://sarems.github.io/AdvancedBoosting.jl/)
 
 
-Experimental package for various Gradient Boosting models.
+Experimental package for various Gradient Boosting models. Currently developed on [Julia 1.10-rc2](https://github.com/JuliaLang/julia/tree/v1.10.0-rc2)
