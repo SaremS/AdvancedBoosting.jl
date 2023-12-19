@@ -17,7 +17,7 @@ makedocs(
 
 # Generate Gaussian example
 using Pkg
-Pkg.add("Plots")
+Pkg.add(["Plots", "Distributions"])
 using AdvancedBoosting, Random, Plots
 
 import Distributions.Normal, Distributions.mean, Distributions.std
