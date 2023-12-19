@@ -17,6 +17,8 @@ makedocs(
 
 # Generate Gaussian example
 using AdvancedBoosting, Random, Plots
+using Pkg
+Pkg.add("Plots")
 import Distributions.Normal, Distributions.mean, Distributions.std
 
 Random.seed!(321);
