@@ -2,7 +2,7 @@
 
 julia_version = "1.10.0-rc2"
 manifest_format = "2.0"
-project_hash = "2c6cc1a77dea6c472ce6ba2c8a73243cd076fd17"
+project_hash = "db84c5bdf8e36f44d0f8d438906326520ab40d10"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -46,9 +46,9 @@ version = "1.1.1"
 
 [[deps.ArrayInterface]]
 deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "247efbccf92448be332d154d6ca56b9fcdd93c31"
+git-tree-sha1 = "bbec08a37f8722786d87bedf84eae19c020c4efa"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.6.1"
+version = "7.7.0"
 
     [deps.ArrayInterface.extensions]
     ArrayInterfaceBandedMatricesExt = "BandedMatrices"
@@ -128,9 +128,9 @@ version = "1.58.1"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
-git-tree-sha1 = "e0af648f0692ec1691b5d094b8724ba1346281cf"
+git-tree-sha1 = "2118cb2765f8197b08e5958cdd17c165427425ee"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.18.0"
+version = "1.19.0"
 weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
@@ -617,9 +617,9 @@ version = "7.8.3"
 
 [[deps.NNlib]]
 deps = ["Adapt", "Atomix", "ChainRulesCore", "GPUArraysCore", "KernelAbstractions", "LinearAlgebra", "Pkg", "Random", "Requires", "Statistics"]
-git-tree-sha1 = "ac86d2944bf7a670ac8bf0f7ec099b5898abcc09"
+git-tree-sha1 = "7c221293228506db2fe883251407581e0846688e"
 uuid = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
-version = "0.9.8"
+version = "0.9.9"
 
     [deps.NNlib.extensions]
     NNlibAMDGPUExt = "AMDGPU"
@@ -884,12 +884,13 @@ version = "0.1.15"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "5ef59aea6f18c25168842bded46b16662141ab87"
+git-tree-sha1 = "fba11dbe2562eecdfcac49a05246af09ee64d055"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.7.0"
-weakdeps = ["Statistics"]
+version = "1.8.1"
+weakdeps = ["ChainRulesCore", "Statistics"]
 
     [deps.StaticArrays.extensions]
+    StaticArraysChainRulesCoreExt = "ChainRulesCore"
     StaticArraysStatisticsExt = "Statistics"
 
 [[deps.StaticArraysCore]]

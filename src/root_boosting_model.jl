@@ -3,12 +3,12 @@ export RootBoostingModel, is_trained
 import DecisionTree.DecisionTreeRegressor
 
 """
-Single boosting model whose inputs, outputs and parameters are of type `T<:Real`.
+Single boosting model whose inputs, outputs and parameters are of type `T<:AbstractFloat`.
 
 Can be constructed either via
 
 ```julia
-RootBoostingModel{T}(max_depth::Int64, n_trees::Int64)::RootBoostingModel{T} where T<:Real
+RootBoostingModel{T}(max_depth::Int64, n_trees::Int64)::RootBoostingModel{T} where T<:AbstractFloat
 ```
 
 or
@@ -48,7 +48,7 @@ X = randn(10) # a single datapoint with 10 features
 predictions = models(X) #returns a vector of prediction vectors
 ```
 """
-mutable struct RootBoostingModel{T<:Real}
+mutable struct RootBoostingModel{T<:AbstractFloat}
     intercept::Union{T,Nothing}
     coeffs::Vector{T}
     trees::Vector{DecisionTreeRegressor}
@@ -58,7 +58,7 @@ mutable struct RootBoostingModel{T<:Real}
 end
 
 
-function RootBoostingModel{T}(max_depth::Int64, n_trees::Int64) where {T<:Real}
+function RootBoostingModel{T}(max_depth::Int64, n_trees::Int64) where {T<:AbstractFloat}
     return RootBoostingModel(
         nothing,
         T[],
@@ -90,7 +90,7 @@ function is_trained(m::RootBoostingModel)::Bool
     !isnothing(m.intercept)
 end
 
-function (m::RootBoostingModel{T})(X::Matrix{T})::Vector{T} where {T<:Real}
+function (m::RootBoostingModel{T})(X::Matrix{T})::Vector{T} where {T<:AbstractFloat}
     @assert is_trained(m)
 
     n, _ = size(X)
@@ -108,11 +108,11 @@ function (m::RootBoostingModel{T})(X::Matrix{T})::Vector{T} where {T<:Real}
     return predictions
 end
 
-function (m::RootBoostingModel{T})(X::Vector{T})::Vector{T} where {T<:Real}
+function (m::RootBoostingModel{T})(X::Vector{T})::Vector{T} where T<:AbstractFloat
     Xmat = Matrix(transpose(X))
     return m(Xmat)
 end
 
-function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:Real
+function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:AbstractFloat
     return hcat(map(booster->booster(X), models)...)
 end
