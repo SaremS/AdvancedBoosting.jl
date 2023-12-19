@@ -10,8 +10,10 @@ The abstract supertype corresponding to parameterizable transformations.
 """
 abstract type ParameterizableTransform end
 
-(t::ParameterizableTransform)(boosting_output) = @error "Not implemented"
-(t::ParameterizableTransform)(boosting_output, X) = @error "Not implemented"
+#Use `AbstractVector` here instead of `Vector{T} where {T<:Real}` since autodiff also requires
+#to pass through `TrackedArray`s which would clash with the latter.
+(t::ParameterizableTransform)(boosting_output::AbstractVector) = @error "Not implemented"
+(t::ParameterizableTransform)(boosting_output::AbstractVector, X::AbstractVector) = @error "Not implemented"
 
 """
 Applies the identity transformation,
@@ -49,11 +51,11 @@ mutable struct IdentityTransform <: ParameterizableTransform
     target_idx::Vector{Int64}
 end
 
-function (t::IdentityTransform)(boosting_output)
+function (t::IdentityTransform)(boosting_output::AbstractVector)
     return boosting_output[t.target_idx]
 end
 
-function (t::IdentityTransform)(boosting_output, X)
+function (t::IdentityTransform)(boosting_output::AbstractVector, X::AbstractVector)
     return boosting_output[t.target_idx]
 end
 
@@ -93,11 +95,11 @@ mutable struct SoftplusTransform <: ParameterizableTransform
     target_dims::Vector{Int64}
 end
 
-function (t::SoftplusTransform)(boosting_output)
+function (t::SoftplusTransform)(boosting_output::AbstractVector)
     return softplus.(boosting_output[t.target_dims])
 end
 
-function (t::SoftplusTransform)(boosting_output, X)
+function (t::SoftplusTransform)(boosting_output::AbstractVector, X::AbstractVector)
     return softplus.(boosting_output[t.target_dims])
 end
 
@@ -139,11 +141,11 @@ mutable struct SigmoidTransform <: ParameterizableTransform
     target_dims::Vector{Int64}
 end
 
-function (t::SigmoidTransform)(boosting_output)
+function (t::SigmoidTransform)(boosting_output::AbstractVector)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
-function (t::SigmoidTransform)(boosting_output, X)
+function (t::SigmoidTransform)(boosting_output::AbstractVector, X::AbstractVector)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
@@ -193,10 +195,10 @@ mutable struct MultiTransform <: ParameterizableTransform
     transforms::Vector{ParameterizableTransform}
 end
 
-function (t::MultiTransform)(boosting_output, X)
+function (t::MultiTransform)(boosting_output::AbstractVector, X::AbstractVector)
     return vcat(map(transform -> transform(boosting_output, X), t.transforms)...)
 end
 
-function (t::MultiTransform)(boosting_output)
+function (t::MultiTransform)(boosting_output::AbstractVector)
     return vcat(map(transform -> transform(boosting_output), t.transforms)...)
 end

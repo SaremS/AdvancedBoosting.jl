@@ -1,24 +1,28 @@
-export AdvancedBoostingModel
+export AdvancedBoostingModel,
+       fit!,
+       init_coeffs!,
+       build_trees!
 
-import Distributions.Distribution
+"""
+Abstract type that specifies the behavior of all 'advanced boosting models'.
 
-abstract type AdvancedBoostingModel end
+These models are meant to consist of multiple standard boosting models (`RootBoostingModel`) and combine them into a single, non-trivial and combined model.
 
-mutable struct DistributionalBoostingModel{T<:Real, D<:Distribution} <: AbstractBoostingModel 
-    dist::Type{D}
-    boosters::Vector{RootBoostingModel{T}}
-    transform::ParameterizableTransform
+Each model needs to be associated with a respective prediction function 
+`(m::AdvancedBoostingModel{T})(X::Matrix{T}) where {T<:Real}` and the `init_coeffs!` and `build_trees!` functions.
+
+The former initializes the ``\\alpha_0`` intercepts of each root model, whereas the latter fits the decision trees of the subsequent models. The `fit!` function then provides a single interface for any `AdvancedBoostinModel` by subsequently calling both `init_coeffs!` and `build_trees!`.
+"""
+abstract type AdvancedBoostingModel{T<:Real} end
+
+(m::AdvancedBoostingModel{T})(X::Matrix{T}) where {T<:Real} = @error "Not implemented"
+
+function fit!(m::AdvancedBoostingModel{T}, X::Matrix{T}, y::Vector{T}) where {T<:Real}
+    init_coeffs!(m, X, y)
+    build_trees!(m, X, y)
 end
 
-function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:Real
-    return hcat(map(booster->booster(X), models)...)
-end
-
-
-function (m::DistributionalBoostingModel{T})(X::Matrix{T}) where T<:Real
-    predictions = m.boosters(X)
-    preds_us = Flux.unstack(predictions,1)
-    mapped_predictions = map(pred->m.dist(m.transform(pred)...), preds_us)
-    
-    return vcat(mapped_predictions)
-end
+init_coeffs!(m::AdvancedBoostingModel{T}, X::Matrix{T}, y::Vector{T}) where {T<:Real} =
+    @error "Not implemented"
+build_trees!(m::AdvancedBoostingModel{T}, X::Matrix{T}, y::Vector{T}) where {T<:Real} =
+    @error "Not implemented"

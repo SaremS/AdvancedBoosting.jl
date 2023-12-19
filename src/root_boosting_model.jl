@@ -38,6 +38,15 @@ predictions = model(X)
 ```
 
 Notice that the `RootBoostingModel` deliberately has no API to be trained directly. Rather, a higher level model typically employs several `RootBoostingModel`s and the training happens via the higher level model APIs.
+
+As a helper function, it is also possible to make predictions from a vector of `RootBoostingModel`s as follows:
+
+```julia
+models = [RootBoostingModel(1,100), RootBoostingModel(1,100)]
+...(training the models here)
+X = randn(10) # a single datapoint with 10 features
+predictions = models(X) #returns a vector of prediction vectors
+```
 """
 mutable struct RootBoostingModel{T<:Real}
     intercept::Union{T,Nothing}
@@ -102,4 +111,8 @@ end
 function (m::RootBoostingModel{T})(X::Vector{T})::Vector{T} where {T<:Real}
     Xmat = Matrix(transpose(X))
     return m(Xmat)
+end
+
+function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:Real
+    return hcat(map(booster->booster(X), models)...)
 end
