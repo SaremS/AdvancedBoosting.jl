@@ -65,3 +65,59 @@ scatter!(p1,
 ```
 
 ![](assets/normdist_example.png)
+
+
+### Gaussian conditional distribution, censored at ``y=0``
+Same as above, but now we have the Gaussian distribution censored at y=0, i.e.
+
+```math
+p(y|\mathbf{x})=\Phi(0|f_1(\mathbf{x}),s(f_2(\mathbf{x})))\cdot\mathbb{I}(y=0) + (1-\Phi(0|f_1(\mathbf{x}),s(f_2(\mathbf{x}))))\cdot\mathcal{N}(y|f_1(\mathbf{x}),s(f_2(\mathbf{x})))\cdot\mathbb{I}(y=0)
+```
+
+```julia
+import Distributions.Normal, Distributions.censored
+Random.seed!(321)
+
+X = rand(200,1) .* 6 .- 3
+f(x) = censored(Normal(sin( 2 * x), 0.25*abs(sin(x))+0.1), lower=0.0)
+y = rand.(f.(X))
+
+#define custom distribution to match our type definition
+import Distributions.ContinuousUnivariateDistribution, Distributions.logpdf, Distributions.mean, Distributions.quantile
+
+struct ZeroCensoredNormal <: ContinuousUnivariateDistribution
+    mu
+    sigma
+end
+
+logpdf(m::ZeroCensoredNormal, y) = logpdf(censored(Normal(m.mu, m.sigma), lower=0.0), y)
+mean(m::ZeroCensoredNormal) = mean(censored(Normal(m.mu, m.sigma), lower=0.0))
+quantile(m::ZeroCensoredNormal, p) = quantile(censored(Normal(m.mu, m.sigma), lower=0.0),p)
+
+
+model = DistributionalBoostingModel(
+    ZeroCensoredNormal,
+    [RootBoostingModel(1,5),RootBoostingModel(1,5)],
+    MultiTransform([IdentityTransform([1]), SoftplusTransform([2])])
+)
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:]
+pred_dists = model(lines)
+mean_pred = mean.(pred_dists)
+ribbon_pred = (mean_pred .- quantile.(pred_dists,0.05), quantile.(pred_dists,0.95) .- mean_pred)
+
+line_dists = f.(lines)
+mean_line = mean.(line_dists)
+ribbon_line = (mean_line .- quantile.(line_dists,0.05), quantile.(line_dists,0.95) .- mean_line)
+
+
+p1 = plot()
+
+plot!(p1,lines[:], mean_line, ribbon = ribbon_line, label="Ground truth distribution", title="Gaussian Distribution with harmonic mean + variance, censored at 0.0", 
+    titlefontsize=10, fmt=:png, lw=2)
+plot!(p1, lines[:], mean_pred, ribbon = ribbon_pred, label="Gradient Boosting estimate", lw=2)
+scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=200)")
+```
+![](assets/normdist_censored_example.png)
