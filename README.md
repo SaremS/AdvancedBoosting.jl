@@ -9,9 +9,9 @@ Experimental package for various Gradient Boosting models. Currently developed o
 
 ## Examples
 
-1. (Gaussian conditional distribution)[#gaussian-conditional-distribution]
-2. (Censored Gaussian conditional distribution)[#censored-gaussian-conditional-distribution]
-3. (Varying Coefficient boosting)[#varying-coefficient-boosting]
+1. [Gaussian conditional distribution](#gaussian-conditional-distribution)
+2. [Censored Gaussian conditional distribution](#censored-gaussian-conditional-distribution)
+3. [Varying Coefficient boosting](#varying-coefficient-boosting)
 
 ### Gaussian conditional distribution
 Here, we model the conditional mean and standard deivation as Gradient Boosting models, i.e.
