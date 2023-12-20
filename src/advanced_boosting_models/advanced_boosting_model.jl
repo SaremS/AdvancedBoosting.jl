@@ -41,6 +41,26 @@ model_loss(
     y::Union{T, AbstractArray{T}},
 ) where T<:AbstractFloat = @error "Not implemented"
 
+
+function model_loss_stacked(
+	m::AdvancedBoostingModel{T},
+	X::Matrix{T},
+	transform::ParameterizableTransform,
+	ypred,
+	y::AbstractArray{T}
+) where T<:AbstractFloat
+	n = size(y, 1)	
+
+	Xu = unstack(X, dims=1)
+	ypredu = unstack(ypred, dims=1)
+	yu = unstack(y, dims=1)
+
+	return map(
+		   i->model_loss(m, Xu[i], transform, ypredu[i], yu[i]),
+		   1:n
+	)
+end
+
 """
 Initializes the ``\\alpha_0`` intercepts of each boosting model.
 """
@@ -54,14 +74,12 @@ function init_intercepts!(
     ps, t = destructure(m.transform)
     
     n_c = length(coeffs)
-    n_p = length(ps)
+    n = size(y,1)
     
     full_params_init = vcat(coeffs,ps)
     
-    n = length(y)
-
     full_params_opt = minimizer(optimize(c -> 
-	mean(map(i->model_loss(m,X[i,:], t(c[n_c+1:end]), c[1:n_c], y[i]), 1:n)), 
+					 mean(model_loss_stacked(m, X, t(c[n_c+1:end]), ones(n,n_c).*transpose(c[1:n_c]), y)), 
 	full_params_init,
 	BFGS();
 	autodiff = :forward)
@@ -98,15 +116,13 @@ function build_trees!(
     #we also need to obtain any optimize the respective parameters
     ps, t = destructure(m.transform)
 
-    n = length(y)
-    
     for _ in 1:max_trees
         #Current predictions per model and respective gradients
         trees_per_booster = count_trees_in_booster(m)
         predictions = m.boosters(X)
  
 	prediction_grads = ReverseDiff.gradient(p-> mean(
-		map(i->model_loss(m,X[i,:], m.transform,p[i],y[i]), 1:n)),
+		model_loss_stacked(m,X, m.transform,p,y)),
 		predictions
 	)
 	
@@ -117,7 +133,7 @@ function build_trees!(
         target_grads[:,zero_idx] .= 0.0
         
         #one gradient column per model
-        grads_unst = unstack(target_grads, 2)
+        grads_unst = unstack(target_grads, dims=2)
         
         #build new trees and predict
         new_trees = map(i->build_tree(max_depths[i], X, grads_unst[i]), 1:n_models)
@@ -126,7 +142,6 @@ function build_trees!(
         new_coeffs = ones(n_models)
         
         n_c = length(new_coeffs)
-        n_p = length(ps)
         
 	#Current intercets and coefficients per boosting model, number of intercepts (n_is) and total number
 	#of current trees (n_cs), large matrix of all predictions from each tree from each model (all_preds)
@@ -161,15 +176,15 @@ function build_trees!(
 	
             full_params_opt = minimizer(
                 optimize(
-                    c->mean(map(
-				i->model_loss(m,
-					      X[i,:],
-					      t(c[1+n_is+n_cs+n_c : end]),
-					      transpose(c[1 : n_is]) .+ (all_preds .* transpose(c[1+n_is : n_is+n_cs]))*transform_matrix .+ transpose(c[1+n_is+n_cs : n_is+n_cs+n_c]).*new_preds,
-					      y[i]
-					      )
+                    c->mean(
+			    model_loss_stacked(
+				m,
+				X,
+				t(c[1+n_is+n_cs+n_c : end]),
+				transpose(c[1 : n_is]) .+ (all_preds .* transpose(c[1+n_is : n_is+n_cs]))*transform_matrix .+ transpose(c[1+n_is+n_cs : n_is+n_cs+n_c]).*new_preds,
+				y
 				)
-			    ), 
+			), 
                     full_params_init, 
                     BFGS(); 
                     autodiff = :forward
@@ -200,18 +215,16 @@ function build_trees!(
 
             full_params_opt = minimizer(
                 optimize(
-                    c->mean(map(i->model_loss(
+                    c->mean(model_loss_stacked(
                         m,
-			X[i,:],
+			X,
 			t(c[1+n_is+n_cs+n_c:end]),
 			transpose(c[1:n_is]) .+ transpose(c[1+n_is+n_cs: n_is+n_cs+n_c]).*new_preds,
-			y[i]
-                    ), 
+			y
+		       )), 
                     full_params_init, 
                     BFGS(); 
                     autodiff = :forward)
-			)
-		    )
 		)
 		
 	    #Extract respective objects for the first round after parameter initialization
