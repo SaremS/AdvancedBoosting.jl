@@ -36,7 +36,7 @@ weakdeps = ["StaticArrays"]
     AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AdvancedBoosting]]
-deps = ["BlockDiagonals", "DecisionTree", "Distributions", "Documenter", "Flux", "ForwardDiff", "LinearAlgebra", "Optim", "ReverseDiff", "StatsBase"]
+deps = ["BlockDiagonals", "DecisionTree", "Distributions", "Documenter", "Flux", "ForwardDiff", "LinearAlgebra", "Optim", "Random", "ReverseDiff", "StatsBase"]
 path = "/Users/saremseitz/Documents/Projects/open_source/AdvancedBoosting"
 uuid = "b653da86-1ed7-41cb-a8a7-ecde5daf8709"
 version = "1.0.0-DEV"

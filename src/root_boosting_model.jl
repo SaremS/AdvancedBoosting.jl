@@ -116,3 +116,7 @@ end
 function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:AbstractFloat
     return hcat(map(booster->booster(X), models)...)
 end
+
+function (models::Vector{RootBoostingModel{T}})(X::Vector{T}) where T<:AbstractFloat
+    return hcat(map(booster->booster(X), models)...)
+end

@@ -14,7 +14,7 @@ p(y|\mathbf{x})=\mathcal{N}(y|f_1(\mathbf{x}),s(f_2(\mathbf{x})))
 where $f_1,f_2$ are individual Gradient Boosting models and $s$ is the softplus function
 
 ```math
-\text{softplus}(x)=\log\left(\exp(x)\right)
+\text{softplus}(x)=\log\left(\exp(x)+1\right)
 ```
 
 ```julia

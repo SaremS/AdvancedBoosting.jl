@@ -66,7 +66,7 @@ struct ZeroCensoredNormal <: ContinuousUnivariateDistribution
     sigma
 end
 
-logpdf(m::ZeroCensoredNormal, y) = logpdf(censored(Normal(m.mu, m.sigma), lower=0.0), y)
+logpdf(m::ZeroCensoredNormal, y::Array{Float64}) = logpdf(censored(Normal(m.mu, m.sigma), lower=0.0), y)
 mean(m::ZeroCensoredNormal) = mean(censored(Normal(m.mu, m.sigma), lower=0.0))
 quantile(m::ZeroCensoredNormal, p) = quantile(censored(Normal(m.mu, m.sigma), lower=0.0),p)
 

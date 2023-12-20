@@ -18,7 +18,7 @@ $$
 where $f_1,f_2$ are individual Gradient Boosting models and $s$ is the softplus function
 
 $$
-\text{softplus}(x)=\log\left(\exp(x)\right)
+\text{softplus}(x)=\log\left(\exp(x)+1\right)
 $$
 
 ```
