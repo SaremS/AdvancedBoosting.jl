@@ -1,8 +1,8 @@
 name: CI
 on:
   push:
-    branches:
-      - main
+    branches: ['main']
+    paths: ['src/**', 'test/**', '.github/workflows/CI.yml']
     tags: ['*']
   pull_request:
   workflow_dispatch:
