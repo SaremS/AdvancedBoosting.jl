@@ -7,7 +7,11 @@
 
 Experimental package for various Gradient Boosting models. Currently developed on [Julia 1.10-rc2](https://github.com/JuliaLang/julia/tree/v1.10.0-rc2)
 
-## Example usage
+## Examples
+
+1. (Gaussian conditional distribution)[#gaussian-conditional-distribution]
+2. (Censored Gaussian conditional distribution)[#censored-gaussian-conditional-distribution]
+3. (Varying Coefficient boosting)[#varying-coefficient-boosting]
 
 ### Gaussian conditional distribution
 Here, we model the conditional mean and standard deivation as Gradient Boosting models, i.e.
@@ -72,7 +76,7 @@ scatter!(p1,
 ![](assets/normdist_example.png)
 
 
-### Gaussian conditional distribution, censored at $y=0$
+### Censored Gaussian conditional distribution
 Same as above, but now we have the Gaussian distribution censored at y=0, i.e.
 
 $$
@@ -126,3 +130,51 @@ plot!(p1, lines[:], mean_pred, ribbon = ribbon_pred, label="Gradient Boosting es
 scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=200)")
 ```
 ![](assets/normdist_censored_example.png)
+
+
+### Varying Coefficient Boosting 
+Model the coefficients of a linear model as gradient boosted, varying coefficients:
+
+$$
+y=\alpha + f_1(\mathbf{x})\cdot \mathbf{x}_{(1)} + \cdots + f_M(\mathbf{x})\cdot \mathbf{x}_{(M)}
+$$
+
+where $\mathbf{x}\in\mathbb{R}^M$ and $f_1,...,f_M$ are individual Gradient Boosting models. 
+
+```
+using AdvancedBoosting, Random, Plots
+import Distributions.Normal, Distributions.mean 
+
+Random.seed!(321);
+
+X = rand(100,1) .* 6 .- 3
+f(x) = Normal(0.5*x^2, 0.25)
+y = rand.(f.(X))
+
+model = VaryingCoefficientBoostingModel(
+    [RootBoostingModel(1,5)],
+    VaryingCoefficientTransform()
+);
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:];
+predictions = model(lines);
+
+p1 = plot();
+
+plot!(p1, lines[:], mean.(f.(lines[:])),
+      label="Ground truth function",
+      title="Varying Coefficient Boosting for a square function", 
+      titlefontsize=10,
+      fmt=:png,
+      lw=2,
+      legend=:top);
+plot!(p1, lines[:], predictions,
+      label="Gradient Boosting estimate",
+      lw=2);
+scatter!(p1, X[:], y[:],
+         markersize=0.25,
+         label="Data (n=100)");
+```
+![](assets/varying_coefficient_example.png)

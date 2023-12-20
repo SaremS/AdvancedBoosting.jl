@@ -1,7 +1,12 @@
 export ParameterizableTransform,
-    IdentityTransform, SoftplusTransform, SigmoidTransform, MultiTransform
+    IdentityTransform,
+    SoftplusTransform,
+    SigmoidTransform,
+    MultiTransform,
+    VaryingCoefficientTransform
 
 import ReverseDiff.TrackedReal
+import Flux.@functor
 
 """
 The abstract supertype corresponding to parameterizable transformations.
@@ -10,12 +15,8 @@ abstract type ParameterizableTransform end
 
 #Use `AbstractVector` here instead of `Vector{T} where {T<:Real}` since autodiff also requires
 #to pass through `TrackedArray`s which would clash with the latter.
-(t::ParameterizableTransform)(boosting_output) =
-    @error "Not implemented"
-(t::ParameterizableTransform)(
-    boosting_output,
-    X,
-) = @error "Not implemented"
+(t::ParameterizableTransform)(boosting_output) = @error "Not implemented"
+(t::ParameterizableTransform)(boosting_output, X) = @error "Not implemented"
 
 """
 Applies the identity transformation,
@@ -57,10 +58,7 @@ function (t::IdentityTransform)(boosting_output)
     return boosting_output[t.target_idx]
 end
 
-function (t::IdentityTransform)(
-    boosting_output,
-    X::Union{TrackedReal,AbstractVector},
-)
+function (t::IdentityTransform)(boosting_output, X::Union{TrackedReal,AbstractVector})
     return boosting_output[t.target_idx]
 end
 
@@ -104,10 +102,7 @@ function (t::SoftplusTransform)(boosting_output)
     return softplus.(boosting_output[t.target_dims])
 end
 
-function (t::SoftplusTransform)(
-    boosting_output,
-    X,
-)
+function (t::SoftplusTransform)(boosting_output, X)
     return softplus.(boosting_output[t.target_dims])
 end
 
@@ -153,10 +148,7 @@ function (t::SigmoidTransform)(boosting_output)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
-function (t::SigmoidTransform)(
-    boosting_output,
-    X,
-)
+function (t::SigmoidTransform)(boosting_output, X)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
@@ -206,13 +198,51 @@ mutable struct MultiTransform <: ParameterizableTransform
     transforms::Vector{ParameterizableTransform}
 end
 
-function (t::MultiTransform)(
-    boosting_output,
-    X,
-)
+function (t::MultiTransform)(boosting_output, X)
     return vcat(map(transform -> transform(boosting_output, X), t.transforms)...)
 end
 
 function (t::MultiTransform)(boosting_output)
     return vcat(map(transform -> transform(boosting_output), t.transforms)...)
+end
+
+
+"""
+Applies the outputs of multiple gradient boosting models as a varying coefficient model.
+I.e., for an input vector ``\\mathbf{x}\\in\\mathbb{R}^M`` and ``M`` stacked boosting models,
+
+```math
+f(\\cdot)=\\left(f_1(\\cdot),...,f_M(\\cdot)\\right)^T,
+```
+we have
+
+```math
+g(f(\\mathbf{x}),\\mathbf{x};\\alpha)=\\alpha + \\left(f_1(\\cdot),...,f_M(\\cdot)\\right) \\mathbf{x},
+```
+
+where ``\\alpha`` denotes the intercept of the varying coefficient model.
+
+```jldoctest
+using AdvancedBoosting
+transform = VaryingCoefficientTransform()
+
+transform([1.,2.], [1.,2.])
+
+# output
+
+6.0
+```
+"""
+mutable struct VaryingCoefficientTransform <: ParameterizableTransform
+    intercept::AbstractVector
+end
+@functor VaryingCoefficientTransform
+
+VaryingCoefficientTransform() = VaryingCoefficientTransform(ones(1))
+
+function (t::VaryingCoefficientTransform)(
+    boosting_output::AbstractVector,
+    X::AbstractVector,
+)
+    return t.intercept[1] .+ transpose(boosting_output) * X
 end

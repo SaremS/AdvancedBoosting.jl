@@ -3,6 +3,7 @@ using Test
 
 const tests = [
     "advanced_boosting_models/distributional_boosting_model",
+    "advanced_boosting_models/varying_coefficient_boosting_model",
     "transforms",
     "root_boosting_model",
 ]

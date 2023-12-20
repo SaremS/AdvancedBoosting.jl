@@ -97,3 +97,32 @@ plot!(p1, lines[:], mean_pred, ribbon = ribbon_pred, label="Gradient Boosting es
 scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=200)")
 
 savefig(p1, "docs/build/assets/normdist_censored_example.png");
+
+
+#Generate varying coefficient example
+using AdvancedBoosting, Random, Plots
+
+Random.seed!(321);
+
+X = rand(100,1) .* 6 .- 3
+f(x) = Normal(0.5*x^2, 0.25)
+y = rand.(f.(X))
+
+model = VaryingCoefficientBoostingModel(
+    [RootBoostingModel(1,5)],
+    VaryingCoefficientTransform()
+);
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:];
+predictions = model(lines);
+
+p1 = plot();
+
+plot!(p1,lines[:], mean.(f.(lines[:])), label="Ground truth function", title="Varying Coefficient Boosting for a square function", 
+    titlefontsize=10, fmt=:png, lw=2, legend=:top);
+plot!(p1, lines[:],predictions, label="Gradient Boosting estimate", lw=2);
+scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=100)");
+
+savefig(p1, "docs/build/assets/varying_coefficient_example.png");
