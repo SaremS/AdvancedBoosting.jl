@@ -1,9 +1,7 @@
 export ParameterizableTransform,
-	IdentityTransform, 
-	SoftplusTransform,
-	SigmoidTransform,
-	MultiTransform
+    IdentityTransform, SoftplusTransform, SigmoidTransform, MultiTransform
 
+import ReverseDiff.TrackedReal
 
 """
 The abstract supertype corresponding to parameterizable transformations.
@@ -12,8 +10,12 @@ abstract type ParameterizableTransform end
 
 #Use `AbstractVector` here instead of `Vector{T} where {T<:Real}` since autodiff also requires
 #to pass through `TrackedArray`s which would clash with the latter.
-(t::ParameterizableTransform)(boosting_output::AbstractVector) = @error "Not implemented"
-(t::ParameterizableTransform)(boosting_output::AbstractVector, X::AbstractVector) = @error "Not implemented"
+(t::ParameterizableTransform)(boosting_output) =
+    @error "Not implemented"
+(t::ParameterizableTransform)(
+    boosting_output,
+    X,
+) = @error "Not implemented"
 
 """
 Applies the identity transformation,
@@ -51,11 +53,14 @@ mutable struct IdentityTransform <: ParameterizableTransform
     target_idx::Vector{Int64}
 end
 
-function (t::IdentityTransform)(boosting_output::AbstractVector)
+function (t::IdentityTransform)(boosting_output)
     return boosting_output[t.target_idx]
 end
 
-function (t::IdentityTransform)(boosting_output::AbstractVector, X::AbstractVector)
+function (t::IdentityTransform)(
+    boosting_output,
+    X::Union{TrackedReal,AbstractVector},
+)
     return boosting_output[t.target_idx]
 end
 
@@ -95,11 +100,14 @@ mutable struct SoftplusTransform <: ParameterizableTransform
     target_dims::Vector{Int64}
 end
 
-function (t::SoftplusTransform)(boosting_output::AbstractVector)
+function (t::SoftplusTransform)(boosting_output)
     return softplus.(boosting_output[t.target_dims])
 end
 
-function (t::SoftplusTransform)(boosting_output::AbstractVector, X::AbstractVector)
+function (t::SoftplusTransform)(
+    boosting_output,
+    X,
+)
     return softplus.(boosting_output[t.target_dims])
 end
 
@@ -123,7 +131,7 @@ transform([0.], zeros(3))
 # output
 
 1-element Vector{Float64}:
- 0.5 
+ 0.5
 ```
 
 ```jldoctest
@@ -134,18 +142,21 @@ transform([0.])
 # output
 
 1-element Vector{Float64}:
- 0.5 
+ 0.5
 ```
 """
 mutable struct SigmoidTransform <: ParameterizableTransform
     target_dims::Vector{Int64}
 end
 
-function (t::SigmoidTransform)(boosting_output::AbstractVector)
+function (t::SigmoidTransform)(boosting_output)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
-function (t::SigmoidTransform)(boosting_output::AbstractVector, X::AbstractVector)
+function (t::SigmoidTransform)(
+    boosting_output,
+    X,
+)
     return sigmoid.(boosting_output[t.target_dims])
 end
 
@@ -153,7 +164,7 @@ sigmoid(x::T) where {T<:Real} = 1.0 / (1.0 + exp(-x))
 
 
 """
-Applies multiple `ParameterizableTransform`s on the same input and concatenates their outputs. I.e. let ``g_1(\\cdot,\\cdot),...,g_n(\\cdot,\\cdot)`` denote a set of ``n`` `ParameterizableTransform`s. Then, the ``MultiTransform`` computes as 
+Applies multiple `ParameterizableTransform`s on the same input and concatenates their outputs. I.e. let ``g_1(\\cdot,\\cdot),...,g_n(\\cdot,\\cdot)`` denote a set of ``n`` `ParameterizableTransform`s. Then, the ``MultiTransform`` computes as
 
 ```math
 g(f(\\mathbf{x}),\\mathbf{x})=\\left(g_1(f(\\mathbf{x}),\\mathbf{x}),...,g_n(f(\\mathbf{x}),\\mathbf{x})\\right)^T,
@@ -173,7 +184,7 @@ transform([0.,0.], zeros(3))
 
 2-element Vector{Float64}:
  0.0
- 0.5 
+ 0.5
 ```
 
 ```jldoctest
@@ -188,17 +199,20 @@ transform([0.,0.])
 
 2-element Vector{Float64}:
  0.0
- 0.5 
+ 0.5
 ```
 """
 mutable struct MultiTransform <: ParameterizableTransform
     transforms::Vector{ParameterizableTransform}
 end
 
-function (t::MultiTransform)(boosting_output::AbstractVector, X::AbstractVector)
+function (t::MultiTransform)(
+    boosting_output,
+    X,
+)
     return vcat(map(transform -> transform(boosting_output, X), t.transforms)...)
 end
 
-function (t::MultiTransform)(boosting_output::AbstractVector)
+function (t::MultiTransform)(boosting_output)
     return vcat(map(transform -> transform(boosting_output), t.transforms)...)
 end
