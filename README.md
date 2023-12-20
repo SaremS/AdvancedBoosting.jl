@@ -136,7 +136,7 @@ scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=200)")
 Model the coefficients of a linear model as gradient boosted, varying coefficients:
 
 $$
-y=\alpha + f_1(\mathbf{x})\cdot \mathbf{x}_{(1)} + \cdots + f_M(\mathbf{x})\cdot \mathbf{x}_{(M)}
+y=\alpha+f_1(\mathbf{x})\cdot\mathbf{x}_{(1)}+\cdots+f_M(\mathbf{x})\cdot\mathbf{x}_{(M)}
 $$
 
 where $\mathbf{x}\in\mathbb{R}^M$ and $f_1,...,f_M$ are individual Gradient Boosting models. 
