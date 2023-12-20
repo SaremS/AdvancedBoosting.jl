@@ -49,7 +49,7 @@ end
     @test transform2([1.0, 2.0], [1.0, 2.0]) == sig.([1.0, 2.0])
 end
 
-@testset "SigmoidTransform" begin
+@testset "MultiTransform" begin
     transform = MultiTransform([IdentityTransform([1]), SigmoidTransform([1])])
 
     sig(x) = 1.0 / (1.0 + exp(-x))
@@ -64,4 +64,11 @@ end
     @test transform2([1.0, 2.0]) == [1.0, 2.0, sig(1.0), sig(2.0)]
 
     @test transform2([1.0, 2.0], [1.0, 2.0]) == [1.0, 2.0, sig(1.0), sig(2.0)]
+end
+
+@testset "VaryingCoefficientTransform" begin
+    transform = VaryingCoefficientTransform()
+
+    @test transform([1.0], [1.0]) == 2.0
+    @test transform([1.0, 2.0], [1.0, 2.0]) == 6.0
 end

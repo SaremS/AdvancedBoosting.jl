@@ -121,3 +121,51 @@ plot!(p1, lines[:], mean_pred, ribbon = ribbon_pred, label="Gradient Boosting es
 scatter!(p1, X[:],y[:], markersize = 0.25, label = "Data (n=200)")
 ```
 ![](assets/normdist_censored_example.png)
+
+
+### Varying Coefficient Boosting 
+Model the coefficients of a linear model as gradient boosted, varying coefficients:
+
+```math
+y=\alpha + f_1(\mathbf{x})\cdot \mathbf{x}_{(1)} + \cdots + f_M(\mathbf{x})\cdot \mathbf{x}_{(M)}
+```
+
+where $\mathbf{x}\in\mathbb{R}^M$ and $f_1,...,f_M$ are individual Gradient Boosting models. 
+
+```julia
+using AdvancedBoosting, Random, Plots
+import Distributions.Normal, Distributions.mean 
+
+Random.seed!(321);
+
+X = rand(100,1) .* 6 .- 3
+f(x) = Normal(0.5*x^2, 0.25)
+y = rand.(f.(X))
+
+model = VaryingCoefficientBoostingModel(
+    [RootBoostingModel(1,5)],
+    VaryingCoefficientTransform()
+);
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:];
+predictions = model(lines);
+
+p1 = plot();
+
+plot!(p1, lines[:], mean.(f.(lines[:])),
+      label="Ground truth function",
+      title="Varying Coefficient Boosting for a square function", 
+      titlefontsize=10,
+      fmt=:png,
+      lw=2,
+      legend=:top);
+plot!(p1, lines[:], predictions,
+      label="Gradient Boosting estimate",
+      lw=2);
+scatter!(p1, X[:], y[:],
+         markersize=0.25,
+         label="Data (n=100)");
+```
+![](assets/varying_coefficient_example.png)
