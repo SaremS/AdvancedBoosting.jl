@@ -69,6 +69,14 @@ end
 @testset "VaryingCoefficientTransform" begin
     transform = VaryingCoefficientTransform()
 
+    @test transform([1.0], [1.0]) == [2.0]
+    @test transform([1.0, 2.0], [1.0, 2.0]) == [6.0]
+end
+
+@testset "ComposedTransform" begin
+    g1 = VaryingCoefficientTransform()
+    g2 = SoftplusTransform
+
     @test transform([1.0], [1.0]) == 2.0
     @test transform([1.0, 2.0], [1.0, 2.0]) == 6.0
 end

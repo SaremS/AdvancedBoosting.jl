@@ -3,7 +3,8 @@ export ParameterizableTransform,
     SoftplusTransform,
     SigmoidTransform,
     MultiTransform,
-    VaryingCoefficientTransform
+    VaryingCoefficientTransform,
+    ComposedTransform
 
 import ReverseDiff.TrackedReal
 import Flux.@functor
@@ -230,7 +231,8 @@ transform([1.,2.], [1.,2.])
 
 # output
 
-6.0
+1-element Vector{Float64}:
+ 6.0
 ```
 """
 mutable struct VaryingCoefficientTransform <: ParameterizableTransform
@@ -244,5 +246,46 @@ function (t::VaryingCoefficientTransform)(
     boosting_output::AbstractVector,
     X::AbstractVector,
 )
-    return t.intercept[1] .+ transpose(boosting_output) * X
+    return t.intercept .+ transpose(boosting_output) * X
+end
+
+
+"""
+Composes two `ParameterizableTransform`s as follows:
+
+Let ``g1,g2`` denote two `ParameterizableTransform`s, ``\\mathbf{x}`` some input vector and
+``\\mathbf{f}(\\mathbf{x})`` the outputs of one or more boosting models, then
+
+```math
+g(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=(g_2\\circ g_1)(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=g_2(g_1(\\mathbf{f}(\\mathbf{x}),\\mathbf{x}),\\mathbf{x})
+```
+
+Example:
+
+```jldoctest
+using AdvancedBoosting
+g1 = VaryingCoefficientTransform()
+g2 = SoftplusTransform([1])
+
+transform = g2∘g1
+
+transform([1.,2.], [1.,2.])
+
+# output
+
+1-element Vector{Float64}:
+ 6.00247568513773
+```
+"""
+mutable struct ComposedTransform <: ParameterizableTransform
+    g2::ParameterizableTransform
+    g1::ParameterizableTransform
+end
+
+function (t::ComposedTransform)(boosting_output, X)
+    return t.g2(t.g1(boosting_output, X), X)
+end
+
+function ∘(g2::ParameterizableTransform, g1::ParameterizableTransform)
+    return ComposedTransform(g2, g1)
 end

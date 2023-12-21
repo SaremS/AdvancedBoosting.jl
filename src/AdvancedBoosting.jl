@@ -5,7 +5,8 @@ export IdentityTransform,
 	SoftplusTransform,
 	SigmoidTransform,
 	MultiTransform,
-	VaryingCoefficientTransform
+	VaryingCoefficientTransform,
+        ComposedTransform
 
 include("root_boosting_model.jl")
 export RootBoostingModel,
