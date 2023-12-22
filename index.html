@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AdvancedBoosting.jl · AdvancedBoosting.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="AdvancedBoosting.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>AdvancedBoosting.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>AdvancedBoosting.jl</a><ul class="internal"><li><a class="tocitem" href="#Some-examples"><span>Some examples</span></a></li></ul></li><li><span class="tocitem">Advanced Boosting Models</span><ul><li><a class="tocitem" href="advanced_boosting_models/advanced_boosting_model/">AdvancedBoostingModel</a></li><li><a class="tocitem" href="advanced_boosting_models/distributional_boosting_model/">Distributional Boosting</a></li></ul></li><li><a class="tocitem" href="parameterizable_transform/">Parameterizable Transformations</a></li><li><a class="tocitem" href="root_boosting_model/">Root Boosting Model</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>AdvancedBoosting.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>AdvancedBoosting.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/main/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="AdvancedBoosting.jl"><a class="docs-heading-anchor" href="#AdvancedBoosting.jl">AdvancedBoosting.jl</a><a id="AdvancedBoosting.jl-1"></a><a class="docs-heading-anchor-permalink" href="#AdvancedBoosting.jl" title="Permalink"></a></h1><p>Experimental package for various Gradient Boosting models.</p><h2 id="Some-examples"><a class="docs-heading-anchor" href="#Some-examples">Some examples</a><a id="Some-examples-1"></a><a class="docs-heading-anchor-permalink" href="#Some-examples" title="Permalink"></a></h2><h3 id="Gaussian-conditional-distribution"><a class="docs-heading-anchor" href="#Gaussian-conditional-distribution">Gaussian conditional distribution</a><a id="Gaussian-conditional-distribution-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-conditional-distribution" title="Permalink"></a></h3><p>Here, we model the conditional mean and standard deivation as Gradient Boosting models, i.e.</p><p class="math-container">\[p(y|\mathbf{x})=\mathcal{N}(y|f_1(\mathbf{x}),s(f_2(\mathbf{x})))\]</p><p>where <span>$f_1,f_2$</span> are individual Gradient Boosting models and <span>$s$</span> is the softplus function</p><p class="math-container">\[\text{softplus}(x)=\log\left(\exp(x)+1\right)\]</p><pre><code class="language-julia hljs">using AdvancedBoosting, Random, Plots
+import Distributions.Normal, Distributions.mean, Distributions.std
+
+Random.seed!(321);
+
+X = rand(100,1) .* 6 .- 3;
+y = sin.(X) .+ randn(100,1) .* (0.25 .* abs.(sin.(X)) .+ 0.1);
+
+
+model = DistributionalBoostingModel(
+    Normal, #conditional distribution shoud be normal
+    [RootBoostingModel(1,3), RootBoostingModel(1,3)], #both conditional mean and standard deviation are modelled by GradientBoosting
+    MultiTransform(
+        [IdentityTransform([1]), #mean model output stay as is
+         SoftplusTransform([2])  #stddev model output is mapped to the positive, non-zero reals
+    ]) 
+);
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:];
+pred_dists = model(lines);
+
+p1 = plot();
+
+plot!(p1
+    lines[:], sin.(lines[:]),
+    ribbon = 2 .* (0.25 .* sin.(lines[:]).^2 .+ 0.1),
+    label=&quot;Ground truth distribution&quot;,
+    title=&quot;Gaussian Distribution with sin(x) mean + variance&quot;, 
+    titlefontsize=10,
+    fmt=:png,
+    lw=2
+);
+plot!(p1, 
+    lines[:],mean.(pred_dists),
+    ribbon = 2 .* std.(pred_dists),
+    label=&quot;Gradient Boosting estimate&quot;, lw=2
+);
+scatter!(p1,
+    X[:],y[:],
+    markersize = 0.25,
+    label = &quot;Data (n=100)&quot;
+);</code></pre><p><img src="assets/normdist_example.png" alt/></p><h3 id="Gaussian-conditional-distribution,-censored-at-y0"><a class="docs-heading-anchor" href="#Gaussian-conditional-distribution,-censored-at-y0">Gaussian conditional distribution, censored at <span>$y=0$</span></a><a id="Gaussian-conditional-distribution,-censored-at-y0-1"></a><a class="docs-heading-anchor-permalink" href="#Gaussian-conditional-distribution,-censored-at-y0" title="Permalink"></a></h3><p>Same as above, but now we have the Gaussian distribution censored at y=0, i.e.</p><p class="math-container">\[p(y|\mathbf{x})=\Phi(0|f_1(\mathbf{x}),s(f_2(\mathbf{x})))\cdot\mathbb{I}(y=0) + (1-\Phi(0|f_1(\mathbf{x}),s(f_2(\mathbf{x}))))\cdot\mathcal{N}(y|f_1(\mathbf{x}),s(f_2(\mathbf{x})))\cdot\mathbb{I}(y&gt;0)\]</p><pre><code class="language-julia hljs">import Distributions.Normal, Distributions.censored
+Random.seed!(321)
+
+X = rand(200,1) .* 6 .- 3
+f(x) = censored(Normal(sin( 2 * x), 0.25*abs(sin(x))+0.1), lower=0.0)
+y = rand.(f.(X))
+
+#define custom distribution to match our type definition
+import Distributions.ContinuousUnivariateDistribution, Distributions.logpdf, Distributions.mean, Distributions.quantile
+
+struct ZeroCensoredNormal &lt;: ContinuousUnivariateDistribution
+    mu
+    sigma
+end
+
+logpdf(m::ZeroCensoredNormal, y) = logpdf(censored(Normal(m.mu, m.sigma), lower=0.0), y)
+mean(m::ZeroCensoredNormal) = mean(censored(Normal(m.mu, m.sigma), lower=0.0))
+quantile(m::ZeroCensoredNormal, p) = quantile(censored(Normal(m.mu, m.sigma), lower=0.0),p)
+
+
+model = DistributionalBoostingModel(
+    ZeroCensoredNormal,
+    [RootBoostingModel(1,5),RootBoostingModel(1,5)],
+    MultiTransform([IdentityTransform([1]), SoftplusTransform([2])])
+)
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:]
+pred_dists = model(lines)
+mean_pred = mean.(pred_dists)
+ribbon_pred = (mean_pred .- quantile.(pred_dists,0.05), quantile.(pred_dists,0.95) .- mean_pred)
+
+line_dists = f.(lines)
+mean_line = mean.(line_dists)
+ribbon_line = (mean_line .- quantile.(line_dists,0.05), quantile.(line_dists,0.95) .- mean_line)
+
+
+p1 = plot()
+
+plot!(p1,lines[:], mean_line, ribbon = ribbon_line, label=&quot;Ground truth distribution&quot;, title=&quot;Gaussian Distribution with harmonic mean + variance, censored at 0.0&quot;, 
+    titlefontsize=10, fmt=:png, lw=2)
+plot!(p1, lines[:], mean_pred, ribbon = ribbon_pred, label=&quot;Gradient Boosting estimate&quot;, lw=2)
+scatter!(p1, X[:],y[:], markersize = 0.25, label = &quot;Data (n=200)&quot;)</code></pre><p><img src="assets/normdist_censored_example.png" alt/></p><h3 id="Varying-Coefficient-Boosting"><a class="docs-heading-anchor" href="#Varying-Coefficient-Boosting">Varying Coefficient Boosting</a><a id="Varying-Coefficient-Boosting-1"></a><a class="docs-heading-anchor-permalink" href="#Varying-Coefficient-Boosting" title="Permalink"></a></h3><p>Model the coefficients of a linear model as gradient boosted, varying coefficients:</p><p class="math-container">\[y=\alpha + f_1(\mathbf{x})\cdot \mathbf{x}_{(1)} + \cdots + f_M(\mathbf{x})\cdot \mathbf{x}_{(M)}\]</p><p>where <span>$\mathbf{x}\in\mathbb{R}^M$</span> and <span>$f_1,...,f_M$</span> are individual Gradient Boosting models. </p><pre><code class="language-julia hljs">using AdvancedBoosting, Random, Plots
+import Distributions.Normal, Distributions.mean 
+
+Random.seed!(321);
+
+X = rand(100,1) .* 6 .- 3
+f(x) = Normal(0.5*x^2, 0.25)
+y = rand.(f.(X))
+
+model = VaryingCoefficientBoostingModel(
+    [RootBoostingModel(1,5)],
+    VaryingCoefficientTransform()
+);
+
+fit!(model, X, y[:])
+
+lines = collect(-3:0.1:3)[:,:];
+predictions = model(lines);
+
+p1 = plot();
+
+plot!(p1, lines[:], mean.(f.(lines[:])),
+      label=&quot;Ground truth function&quot;,
+      title=&quot;Varying Coefficient Boosting for a square function&quot;, 
+      titlefontsize=10,
+      fmt=:png,
+      lw=2,
+      legend=:top);
+plot!(p1, lines[:], predictions,
+      label=&quot;Gradient Boosting estimate&quot;,
+      lw=2);
+scatter!(p1, X[:], y[:],
+         markersize=0.25,
+         label=&quot;Data (n=100)&quot;);</code></pre><p><img src="assets/varying_coefficient_example.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="advanced_boosting_models/advanced_boosting_model/">AdvancedBoostingModel »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 22 December 2023 10:08">Friday 22 December 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

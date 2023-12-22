@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Parameterizable Transformations · AdvancedBoosting.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="AdvancedBoosting.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">AdvancedBoosting.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">AdvancedBoosting.jl</a></li><li><span class="tocitem">Advanced Boosting Models</span><ul><li><a class="tocitem" href="../advanced_boosting_models/advanced_boosting_model/">AdvancedBoostingModel</a></li><li><a class="tocitem" href="../advanced_boosting_models/distributional_boosting_model/">Distributional Boosting</a></li></ul></li><li class="is-active"><a class="tocitem" href>Parameterizable Transformations</a></li><li><a class="tocitem" href="../root_boosting_model/">Root Boosting Model</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Parameterizable Transformations</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Parameterizable Transformations</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/main/docs/src/parameterizable_transform.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Parameterizable-Transformations"><a class="docs-heading-anchor" href="#Parameterizable-Transformations">Parameterizable Transformations</a><a id="Parameterizable-Transformations-1"></a><a class="docs-heading-anchor-permalink" href="#Parameterizable-Transformations" title="Permalink"></a></h1><p>Transformations that can contain parameters, e.g. linear transformations or neural networks. The respective transformation also needs to be differentiable with respect to both input and parameters in order to properly optimize the boosting model and additional parameters.</p><p>All transformations should be applicable using both the boosting output and the actual input.</p><p>I.e. let <span>$f(\cdot)$</span> denote the function corresponding to a Gradient Boosting model, <span>$\mathbf{x}$</span> the vector of inputs and <span>$g$</span> a <code>ParameterizableTransform</code>. Then, <span>$g$</span> should be applicable as</p><p class="math-container">\[g(f(\mathbf{x}),\mathbf{x};\theta)\]</p><p>Where <span>$\theta$</span> denotes a respective parameter vector of the transformation itself.</p><p>This increases flexibility and allows to, for example, build varying coefficient models where the varying coefficients are modelled by individual gradient boosting models, <span>$f_1,...,f_n$</span>:</p><p class="math-container">\[g(f_1(\mathbf{x}),...,f_n(\mathbf{x}),\mathbf{x};\theta)=\alpha_0 + f_1(\mathbf{x})\cdot x_1 + \cdots + f_n(\mathbf{x})\cdot x_n,\]</p><p>where <span>$\theta\equiv [\alpha]$</span>.</p><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.ParameterizableTransform" href="#AdvancedBoosting.ParameterizableTransform"><code>AdvancedBoosting.ParameterizableTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>The abstract supertype corresponding to parameterizable transformations.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L14-L16">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.IdentityTransform" href="#AdvancedBoosting.IdentityTransform"><code>AdvancedBoosting.IdentityTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Applies the identity transformation,</p><p class="math-container">\[g(f(\mathbf{x}), \mathbf{x})=f(\mathbf{x})_{[i_1,i_2,...,i_m]},\]</p><p>where <span>$[i_1,i_2,...,i_m]$</span> denotes the indices defined in <code>target_idx</code></p><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = IdentityTransform([1])
+transform([2.], zeros(3))
+
+# output
+
+1-element Vector{Float64}:
+ 2.0</code></pre><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = IdentityTransform([1])
+transform([2.])
+
+# output
+
+1-element Vector{Float64}:
+ 2.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L24-L55">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.SoftplusTransform" href="#AdvancedBoosting.SoftplusTransform"><code>AdvancedBoosting.SoftplusTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Applies the softplus transform,</p><p class="math-container">\[g(f(\mathbf{x}),\mathbf{x})=\log(\exp(f(\mathbf{x})_{[i_1,i_2,...,i_m]})+1),\]</p><p>where <span>$[i_1,i_2,...,i_m]$</span> denotes the elements defined in <code>target_idx</code>.</p><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = SoftplusTransform([1])
+transform([0.], zeros(3))
+
+# output
+
+1-element Vector{Float64}:
+ 0.6931471805599453</code></pre><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = SoftplusTransform([1])
+transform([0.])
+
+# output
+
+1-element Vector{Float64}:
+ 0.6931471805599453</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L69-L99">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.SigmoidTransform" href="#AdvancedBoosting.SigmoidTransform"><code>AdvancedBoosting.SigmoidTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Applies the sigmoid transform,</p><p class="math-container">\[g(f(\mathbf{x}),\mathbf{x})=\frac{1}{1+\exp(-f(\mathbf{x})_{[i_1,i_2,...,i_m]})},\]</p><p>where <span>$[i_1,i_2,...,i_m]$</span> denotes the elements defined in <code>target_idx</code>.</p><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = SigmoidTransform([1])
+transform([0.], zeros(3))
+
+# output
+
+1-element Vector{Float64}:
+ 0.5</code></pre><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = SigmoidTransform([1])
+transform([0.])
+
+# output
+
+1-element Vector{Float64}:
+ 0.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L115-L145">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.MultiTransform" href="#AdvancedBoosting.MultiTransform"><code>AdvancedBoosting.MultiTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Applies multiple <code>ParameterizableTransform</code>s on the same input and concatenates their outputs. I.e. let <span>$g_1(\cdot,\cdot),...,g_n(\cdot,\cdot)$</span> denote a set of <span>$n$</span> <code>ParameterizableTransform</code>s. Then, the <span>$MultiTransform$</span> computes as</p><p class="math-container">\[g(f(\mathbf{x}),\mathbf{x})=\left(g_1(f(\mathbf{x}),\mathbf{x}),...,g_n(f(\mathbf{x}),\mathbf{x})\right)^T,\]</p><p>where the outputs of each individual transform are flattened.</p><pre><code class="language-julia hljs">using AdvancedBoosting
+transform1 = IdentityTransform([1])
+transform2 = SigmoidTransform([2])
+transform = MultiTransform([transform1, transform2])
+
+transform([0.,0.], zeros(3))
+
+# output
+
+2-element Vector{Float64}:
+ 0.0
+ 0.5</code></pre><pre><code class="language-julia hljs">using AdvancedBoosting
+transform1 = IdentityTransform([1])
+transform2 = SigmoidTransform([2])
+transform = MultiTransform([transform1, transform2])
+
+transform([0.,0.])
+
+# output
+
+2-element Vector{Float64}:
+ 0.0
+ 0.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L161-L199">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.VaryingCoefficientTransform" href="#AdvancedBoosting.VaryingCoefficientTransform"><code>AdvancedBoosting.VaryingCoefficientTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Applies the outputs of multiple gradient boosting models as a varying coefficient model. I.e., for an input vector <span>$\mathbf{x}\in\mathbb{R}^M$</span> and <span>$M$</span> stacked boosting models,</p><p class="math-container">\[f(\cdot)=\left(f_1(\cdot),...,f_M(\cdot)\right)^T,\]</p><p>we have</p><p class="math-container">\[g(f(\mathbf{x}),\mathbf{x};\alpha)=\alpha + \left(f_{(i_1)}(\mathbf{x}),...,f__{(i_K)}(\mathbf{x})\right)^T \mathbf{x}_{(i_1,...,i_K)},\]</p><p>where <span>$\alpha$</span> denotes the intercept of the varying coefficient model and <span>$i_1,...,i_K$</span> denote the indices defined in <code>target_dims</code></p><pre><code class="language-julia hljs">using AdvancedBoosting
+transform = VaryingCoefficientTransform([1,2])
+
+transform([1.,2.], [1.,2.])
+
+# output
+
+1-element Vector{Float64}:
+ 6.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L213-L239">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.ComposedTransform" href="#AdvancedBoosting.ComposedTransform"><code>AdvancedBoosting.ComposedTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Composes two <code>ParameterizableTransform</code>s as follows:</p><p>Let <span>$g1,g2$</span> denote two <code>ParameterizableTransform</code>s, <span>$\mathbf{x}$</span> some input vector and <span>$\mathbf{f}(\mathbf{x})$</span> the outputs of one or more boosting models, then</p><p class="math-container">\[g(\mathbf{f}(\mathbf{x}),\mathbf{x})=(g_2\circ g_1)(\mathbf{f}(\mathbf{x}),\mathbf{x})=g_2(g_1(\mathbf{f}(\mathbf{x}),\mathbf{x}),\mathbf{x})\]</p><p>Example:</p><pre><code class="language-julia hljs">using AdvancedBoosting
+g1 = VaryingCoefficientTransform([1,2])
+g2 = SoftplusTransform([1])
+
+transform = g2∘g1
+
+transform([1.,2.], [1.,2.])
+
+# output
+
+1-element Vector{Float64}:
+ 6.00247568513773</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L261-L287">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="AdvancedBoosting.SumTransform" href="#AdvancedBoosting.SumTransform"><code>AdvancedBoosting.SumTransform</code></a> — <span class="docstring-category">Type</span></header><section><div><p>Sums two <code>ParameterizableTransform</code>s as follows:</p><p>Let <span>$g1,g2$</span> denote two <code>ParameterizableTransform</code>s, <span>$\mathbf{x}$</span> some input vector and <span>$\mathbf{f}(\mathbf{x})$</span> the outputs of one or more boosting models, then</p><p class="math-container">\[g(\mathbf{f}(\mathbf{x}),\mathbf{x})=(g_1 + g_2)(\mathbf{f}(\mathbf{x}),\mathbf{x})=g_1(\mathbf{f}(\mathbf{x}),\mathbf{x}) + g_2(\mathbf{f}(\mathbf{x}),\mathbf{x})\]</p><p>Example:</p><pre><code class="language-julia hljs">using AdvancedBoosting
+g1 = SoftplusTransform([1])
+g2 = SoftplusTransform([1])
+
+transform = g2+g1
+
+transform([1.], [1.])
+
+# output
+
+1-element Vector{Float64}:
+ 2.6265233750364456</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/SaremS/AdvancedBoosting.jl/blob/ad258167db708bcbaf9cd6b0ba7c470bf861b186/src/transforms.jl#L302-L328">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../advanced_boosting_models/distributional_boosting_model/">« Distributional Boosting</a><a class="docs-footer-nextpage" href="../root_boosting_model/">Root Boosting Model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 22 December 2023 10:08">Friday 22 December 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
