@@ -7,8 +7,22 @@ using Distributions, DecisionTree, Random
     model = DistributionalBoostingModel(
         Normal,
         [
-            RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 0),
-            RootBoostingModel(1.0, Float64[], DecisionTreeRegressor[], 1, 0),
+            RootBoostingModel(
+                0.0,
+                Float64[],
+                DecisionTreeRegressor[],
+                1,
+                0,
+                target_dims = [1],
+            ),
+            RootBoostingModel(
+                1.0,
+                Float64[],
+                DecisionTreeRegressor[],
+                1,
+                0,
+                target_dims = [1],
+            ),
         ],
         MultiTransform([IdentityTransform([1]), IdentityTransform([2])]),
     )
@@ -36,10 +50,10 @@ end
         MultiTransform([IdentityTransform([1]), SoftplusTransform([2])]),
     )
 
-    X = collect(-3:0.1:3)[:,:]
+    X = collect(-3:0.1:3)[:, :]
 
     Random.seed!(123)
-    y = sin.(X)[:] .+ randn(size(X,1))
+    y = sin.(X)[:] .+ randn(size(X, 1))
 
     AdvancedBoosting.init_intercepts!(model, X, y)
 end
@@ -48,16 +62,48 @@ end
     model = DistributionalBoostingModel(
         Normal,
         [
-            RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 1),
-            RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 1),
+            RootBoostingModel(
+                0.0,
+                Float64[],
+                DecisionTreeRegressor[],
+                1,
+                1,
+                target_dims = [1],
+            ),
+            RootBoostingModel(
+                0.0,
+                Float64[],
+                DecisionTreeRegressor[],
+                1,
+                1,
+                target_dims = [1],
+            ),
         ],
         MultiTransform([IdentityTransform([1]), SoftplusTransform([2])]),
     )
 
-    X = collect(-3:0.1:3)[:,:]
+    X = collect(-3:0.1:3)[:, :]
 
     Random.seed!(123)
-    y = sin.(X)[:] .+ randn(size(X,1))
+    y = sin.(X)[:] .+ randn(size(X, 1))
 
     AdvancedBoosting.build_trees!(model, X, y)
+end
+
+@testset "DistributionalBoosting fit! runs through" begin
+    model = DistributionalBoostingModel(
+        Normal,
+        [
+            RootBoostingModel(nothing, Float64[], DecisionTreeRegressor[], 1, 0),
+            RootBoostingModel(nothing, Float64[], DecisionTreeRegressor[], 1, 0),
+        ],
+        MultiTransform([IdentityTransform([1]), SoftplusTransform([2])]),
+    )
+
+    X = collect(-3:0.1:3)[:, :]
+
+    Random.seed!(123)
+    y = sin.(X)[:] .+ randn(size(X, 1))
+
+    AdvancedBoosting.fit!(model, X, y)
 end

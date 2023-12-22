@@ -1,4 +1,4 @@
-export RootBoostingModel, is_trained
+export RootBoostingModel, is_trained, set_target_dims!
 
 import DecisionTree.DecisionTreeRegressor
 
@@ -55,27 +55,64 @@ mutable struct RootBoostingModel{T<:AbstractFloat}
 
     max_depth::Int64
     n_trees::Int64
+
+    target_dims::Union{Nothing,Vector{Int64}}
 end
 
+function RootBoostingModel{T}(
+    intercept::Union{T,Nothing},
+    coeffs::Vector{T},
+    trees::Vector{DecisionTreeRegressor},
+    max_depth::Int64,
+    n_trees::Int64,
+) where {T<:AbstractFloat}
+    return RootBoostingModel{T}(intercept, coeffs, trees, max_depth, n_trees, nothing)
+end
 
-function RootBoostingModel{T}(max_depth::Int64, n_trees::Int64) where {T<:AbstractFloat}
-    return RootBoostingModel(
+function RootBoostingModel(
+    intercept::Union{Float64,Nothing},
+    coeffs::Vector{Float64},
+    trees::Vector{DecisionTreeRegressor},
+    max_depth::Int64,
+    n_trees::Int64,
+)
+    return RootBoostingModel{Float64}(intercept, coeffs, trees, max_depth, n_trees)
+end
+
+function RootBoostingModel(
+    intercept::Union{Float64,Nothing},
+    coeffs::Vector{Float64},
+    trees::Vector{DecisionTreeRegressor},
+    max_depth::Int64,
+    n_trees::Int64;
+    target_dims::Union{Nothing, Vector{Int64}} = nothing
+)
+    return RootBoostingModel{Float64}(intercept, coeffs, trees, max_depth, n_trees, target_dims)
+end
+
+function RootBoostingModel{T}(
+    max_depth::Int64,
+    n_trees::Int64;
+    target_dims = nothing,
+) where {T<:AbstractFloat}
+    return RootBoostingModel{T}(
         nothing,
         T[],
         DecisionTreeRegressor[],
-        transform,
         max_depth,
         n_trees,
+        target_dims,
     )
 end
 
-function RootBoostingModel(max_depth::Int64, n_trees::Int64)
+function RootBoostingModel(max_depth::Int64, n_trees::Int64; target_dims = nothing)
     return RootBoostingModel{Float64}(
         nothing,
         Float64[],
         DecisionTreeRegressor[],
         max_depth,
         n_trees,
+        target_dims,
     )
 end
 
@@ -90,6 +127,17 @@ function is_trained(m::RootBoostingModel)::Bool
     !isnothing(m.intercept)
 end
 
+
+function set_target_dims!(m::RootBoostingModel, target_dims::Vector{Int64})
+    if isnothing(m.target_dims)
+        m.target_dims = target_dims
+    end
+end
+
+function set_target_dims!(m::RootBoostingModel, n_dims::Int64)
+    set_target_dims!(m, collect(1:n_dims))
+end
+
 function (m::RootBoostingModel{T})(X::Matrix{T})::Vector{T} where {T<:AbstractFloat}
     @assert is_trained(m)
 
@@ -100,23 +148,25 @@ function (m::RootBoostingModel{T})(X::Matrix{T})::Vector{T} where {T<:AbstractFl
 
     predictions .+= m.intercept .* ones(n)
 
+    X_target = X[:, m.target_dims]
+
     if n_trees > 0
-        tree_predictions = map(i -> m.coeffs[i] .* predict(m.trees[i], X), 1:n_trees)
+        tree_predictions = map(i -> m.coeffs[i] .* predict(m.trees[i], X_target), 1:n_trees)
         predictions .+= sum(tree_predictions)
     end
 
     return predictions
 end
 
-function (m::RootBoostingModel{T})(X::Vector{T})::Vector{T} where T<:AbstractFloat
-    Xmat = Matrix(transpose(X))
+function (m::RootBoostingModel{T})(X::Vector{T})::Vector{T} where {T<:AbstractFloat}
+    Xmat = Matrix(transpose(X[m.target_dims]))
     return m(Xmat)
 end
 
-function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where T<:AbstractFloat
-    return hcat(map(booster->booster(X), models)...)
+function (models::Vector{RootBoostingModel{T}})(X::Matrix{T}) where {T<:AbstractFloat}
+    return hcat(map(booster -> booster(X), models)...)
 end
 
-function (models::Vector{RootBoostingModel{T}})(X::Vector{T}) where T<:AbstractFloat
-    return hcat(map(booster->booster(X), models)...)
+function (models::Vector{RootBoostingModel{T}})(X::Vector{T}) where {T<:AbstractFloat}
+    return hcat(map(booster -> booster(X), models)...)
 end

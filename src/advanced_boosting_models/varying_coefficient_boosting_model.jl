@@ -20,7 +20,7 @@ using Random
 
 model = VaryingCoefficientModel(
 	[RootBoostingModel(1,5), RootBoostingModel(1,5)],
-	VaryingCoefficientTransform
+        VaryingCoefficientTransform([1,2])
 )
 
 Random.seed!(123)
@@ -42,7 +42,7 @@ function (m::VaryingCoefficientBoostingModel{T})(X::Matrix{T}) where {T<:Abstrac
     preds_us = unstack(predictions, 1)
     mapped_predictions = map(i->m.transform(preds_us[i],X[i,:]), 1:length(preds_us))
     
-    return vcat(mapped_predictions)
+    return vcat(mapped_predictions...)
 end
 
 function model_loss(

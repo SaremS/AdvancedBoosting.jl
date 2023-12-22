@@ -110,7 +110,7 @@ y = rand.(f.(X))
 
 model = VaryingCoefficientBoostingModel(
     [RootBoostingModel(1,5)],
-    VaryingCoefficientTransform()
+    VaryingCoefficientTransform([1])
 );
 
 fit!(model, X, y[:])
