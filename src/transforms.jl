@@ -3,10 +3,13 @@ export ParameterizableTransform,
     SoftplusTransform,
     SigmoidTransform,
     MultiTransform,
-    VaryingCoefficientTransform
+    VaryingCoefficientTransform,
+    ComposedTransform,
+    SumTransform
 
 import ReverseDiff.TrackedReal
 import Flux.@functor
+import Base.+
 
 """
 The abstract supertype corresponding to parameterizable transformations.
@@ -217,32 +220,121 @@ f(\\cdot)=\\left(f_1(\\cdot),...,f_M(\\cdot)\\right)^T,
 we have
 
 ```math
-g(f(\\mathbf{x}),\\mathbf{x};\\alpha)=\\alpha + \\left(f_1(\\cdot),...,f_M(\\cdot)\\right) \\mathbf{x},
+g(f(\\mathbf{x}),\\mathbf{x};\\alpha)=\\alpha + \\left(f_{(i_1)}(\\mathbf{x}),...,f__{(i_K)}(\\mathbf{x})\\right)^T \\mathbf{x}_{(i_1,...,i_K)},
 ```
 
-where ``\\alpha`` denotes the intercept of the varying coefficient model.
+where ``\\alpha`` denotes the intercept of the varying coefficient model and ``i_1,...,i_K`` denote the indices defined in `target_dims`
 
 ```jldoctest
 using AdvancedBoosting
-transform = VaryingCoefficientTransform()
+transform = VaryingCoefficientTransform([1,2])
 
 transform([1.,2.], [1.,2.])
 
 # output
 
-6.0
+1-element Vector{Float64}:
+ 6.0
 ```
 """
 mutable struct VaryingCoefficientTransform <: ParameterizableTransform
     intercept::AbstractVector
+    target_dims_boosters::Vector{Int64}
+    target_dims_x::Vector{Int64}
 end
-@functor VaryingCoefficientTransform
+@functor VaryingCoefficientTransform (intercept,)
 
-VaryingCoefficientTransform() = VaryingCoefficientTransform(ones(1))
+VaryingCoefficientTransform(target_dims::Vector{Int64}) =
+    VaryingCoefficientTransform(ones(1), target_dims, target_dims)
+
+VaryingCoefficientTransform(target_dims_boosters::Vector{Int64}, target_dims_x::Vector{Int64}) =
+    VaryingCoefficientTransform(ones(1), target_dims_boosters, target_dims_x)
 
 function (t::VaryingCoefficientTransform)(
     boosting_output::AbstractVector,
     X::AbstractVector,
 )
-    return t.intercept[1] .+ transpose(boosting_output) * X
+    return t.intercept .+ transpose(boosting_output[t.target_dims_boosters]) * X[t.target_dims_x]
+end
+
+
+"""
+Composes two `ParameterizableTransform`s as follows:
+
+Let ``g1,g2`` denote two `ParameterizableTransform`s, ``\\mathbf{x}`` some input vector and
+``\\mathbf{f}(\\mathbf{x})`` the outputs of one or more boosting models, then
+
+```math
+g(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=(g_2\\circ g_1)(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=g_2(g_1(\\mathbf{f}(\\mathbf{x}),\\mathbf{x}),\\mathbf{x})
+```
+
+Example:
+
+```jldoctest
+using AdvancedBoosting
+g1 = VaryingCoefficientTransform([1,2])
+g2 = SoftplusTransform([1])
+
+transform = g2∘g1
+
+transform([1.,2.], [1.,2.])
+
+# output
+
+1-element Vector{Float64}:
+ 6.00247568513773
+```
+"""
+mutable struct ComposedTransform <: ParameterizableTransform
+    g1::ParameterizableTransform
+    g2::ParameterizableTransform
+end
+
+function (t::ComposedTransform)(boosting_output, X)
+    return t.g2(t.g1(boosting_output, X), X)
+end
+
+function ∘(g2::ParameterizableTransform, g1::ParameterizableTransform)
+    return ComposedTransform(g1, g2)
+end
+
+
+"""
+Sums two `ParameterizableTransform`s as follows:
+
+Let ``g1,g2`` denote two `ParameterizableTransform`s, ``\\mathbf{x}`` some input vector and
+``\\mathbf{f}(\\mathbf{x})`` the outputs of one or more boosting models, then
+
+```math
+g(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=(g_1 + g_2)(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})=g_1(\\mathbf{f}(\\mathbf{x}),\\mathbf{x}) + g_2(\\mathbf{f}(\\mathbf{x}),\\mathbf{x})
+```
+
+Example:
+
+```jldoctest
+using AdvancedBoosting
+g1 = SoftplusTransform([1])
+g2 = SoftplusTransform([1])
+
+transform = g2+g1
+
+transform([1.], [1.])
+
+# output
+
+1-element Vector{Float64}:
+ 2.6265233750364456
+```
+"""
+mutable struct SumTransform <: ParameterizableTransform
+    g1::ParameterizableTransform
+    g2::ParameterizableTransform
+end
+
+function (t::SumTransform)(boosting_output, X)
+    return t.g1(boosting_output, X) .+ t.g1(boosting_output, X)
+end
+
+function +(g1::ParameterizableTransform, g2::ParameterizableTransform)
+    return SumTransform(g1, g2)
 end

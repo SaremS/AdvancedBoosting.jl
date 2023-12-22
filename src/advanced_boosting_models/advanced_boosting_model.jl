@@ -75,6 +75,9 @@ function init_intercepts!(
     
     n_c = length(coeffs)
     n = size(y,1)
+
+    m_dims = size(X,2)
+    map(booster->set_target_dims!(booster, m_dims), m.boosters)
     
     full_params_init = vcat(coeffs,ps)
     

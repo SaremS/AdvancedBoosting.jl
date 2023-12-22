@@ -32,4 +32,7 @@ IdentityTransform
 SoftplusTransform
 SigmoidTransform
 MultiTransform
+VaryingCoefficientTransform
+ComposedTransform
+SumTransform
 ```

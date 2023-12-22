@@ -3,7 +3,8 @@ using Test, AdvancedBoosting
 using Distributions, DecisionTree
 
 @testset "Simple root booster" begin
-    model = RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 0)
+    model =
+        RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 0, target_dims = [1])
 
     result = model(zeros(2))
     @test result == [0.0]
@@ -18,7 +19,14 @@ end
     y = zeros(3)
     DecisionTree.fit!(tree, X, y)
 
-    model = RootBoostingModel(1.0, Float64[1.0], DecisionTreeRegressor[tree], 1, 1)
+    model = RootBoostingModel(
+        1.0,
+        Float64[1.0],
+        DecisionTreeRegressor[tree],
+        1,
+        1,
+        target_dims = [1, 2],
+    )
 
     result = model(zeros(2))
     @test result == [1.0] .+ predict(tree, zeros(1, 2))
@@ -29,8 +37,8 @@ end
 
 @testset "Two simple root booster" begin
     models = [
-        RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 0),
-        RootBoostingModel(1.0, Float64[], DecisionTreeRegressor[], 1, 0),
+        RootBoostingModel(0.0, Float64[], DecisionTreeRegressor[], 1, 0, target_dims = [1]),
+        RootBoostingModel(1.0, Float64[], DecisionTreeRegressor[], 1, 0, target_dims = [1]),
     ]
 
     result = models(zeros(2))
